@@ -58,7 +58,7 @@ done
 	printf 'Each source archive was obtained from its upstream at the URL below, checked\n'
 	printf 'against its pinned SHA-256 hash, and is published as obtained beside the\n'
 	printf 'artifact at https://github.com/%s/releases/tag/%s,\n' "$repository" "$(release_tag)"
-	printf 'whose SHA256SUMS lists the hashes of the sources and the artifacts.\n\n'
+	printf 'where each source and artifact has its SHA-256 beside it as <file>.sha256.\n\n'
 	field '.components[] | "- \(.name) \(.version) (\(.license)), obtained from \(.url)"'
 } >"$prefix/LICENSES/SOURCES.txt"
 
