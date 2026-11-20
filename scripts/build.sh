@@ -53,14 +53,17 @@ while [ "$index" -lt "$count" ]; do
 	index=$((index + 1))
 done
 {
-	printf '%s %s is built from these sources, each of which is also published\n' "$(field '.name')" "$(field '.version')"
-	printf 'beside the artifact at https://github.com/%s/releases/tag/%s:\n\n' "$repository" "$(release_tag)"
-	field '.components[] | "- \(.name) \(.version) (\(.license)): \(.url)"'
-	printf '\nThe recipe that built it is recipes/%s.sh of that tag.\n' "$dependency"
+	printf '%s %s is built without modification from these upstream sources by\n' "$(field '.name')" "$(field '.version')"
+	printf 'recipes/%s.sh at https://github.com/%s/tree/%s.\n' "$dependency" "$repository" "$(release_tag)"
+	printf 'Each source archive was obtained from its upstream at the URL below, checked\n'
+	printf 'against its SHA-256 hash, and is published as obtained beside the artifact at\n'
+	printf 'https://github.com/%s/releases/tag/%s.\n\n' "$repository" "$(release_tag)"
+	field '.components[] | "- \(.name) \(.version) (\(.license)), obtained from \(.url)\n  (\(.hash))"'
 } >"$prefix/LICENSES/SOURCES.txt"
 
 # The recipe builds from $work/<component> and installs into $prefix, with
-# $jobs parallel jobs.
+# $jobs parallel jobs. A recipe that changes the built binaries afterwards
+# says how in $prefix/LICENSES/SOURCES.txt.
 # shellcheck source=/dev/null
 . "$root/recipes/$dependency.sh"
 

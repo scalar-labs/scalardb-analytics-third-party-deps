@@ -56,3 +56,5 @@ for library in "$prefix"/lib/*.so.*; do
 	# shellcheck disable=SC2016 # $ORIGIN is for the dynamic loader
 	[ -L "$library" ] || patchelf --set-rpath '$ORIGIN' "$library"
 done
+# shellcheck disable=SC2016 # $ORIGIN is for the dynamic loader
+printf '\nAfter building, the search path of the shared libraries in lib/ was set to\n$ORIGIN with patchelf; they are otherwise as built.\n' >>"$prefix/LICENSES/SOURCES.txt"

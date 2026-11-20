@@ -41,12 +41,13 @@ while [ "$index" -lt "$count" ]; do
 	index=$((index + 1))
 done
 
+# The notes say what an artifact's LICENSES/SOURCES.txt says, taken from the
+# artifact of the first platform, so that the page and the artifacts agree.
+platform=$(field '.platforms[0]')
 {
-	printf '%s %s, built from its upstream sources by recipes/%s.sh at this tag.\n' "$(field '.name')" "$(field '.version')" "$dependency"
-	printf 'The sources are attached here as well:\n\n'
-	field '.components[] | "- \(.name) \(.version) (\(.license)): \(.url)"'
+	tar -xzOf "$assets/$(artifact_name).tar.gz" "$(artifact_name)/LICENSES/SOURCES.txt"
 	printf '\nEach artifact holds the license texts of these components in\n'
-	printf 'LICENSES/<component>/, and where their sources are in LICENSES/SOURCES.txt.\n'
+	printf 'LICENSES/<component>/, and this text in LICENSES/SOURCES.txt.\n'
 } >"$assets/notes"
 gh release create "$tag" "$assets"/*.tar.gz \
 	--repo "$repository" \
