@@ -1,0 +1,65 @@
+{
+  "dependencies": {
+    "kerberos": {
+      "name": "MIT Kerberos with OpenSSL",
+      "version": "1.22.3",
+      "platforms": ["linux_amd64", "linux_arm64"],
+      "components": [
+        {
+          "name": "openssl",
+          "version": "3.5.9",
+          "license": "Apache-2.0",
+          "url": "https://github.com/openssl/openssl/releases/download/openssl-3.5.9/openssl-3.5.9.tar.gz",
+          "hash": "sha256-YD9WAuLu8A13+9Qp003NWCK7MBdXobyc2yTGcPHrhZo=",
+          "licenses": ["LICENSE.txt"]
+        },
+        {
+          "name": "krb5",
+          "version": "1.22.3",
+          "license": "MIT",
+          "url": "https://kerberos.org/dist/krb5/1.22/krb5-1.22.3.tar.gz",
+          "hash": "sha256-/pCvhEGtn6mwZLjlMHfO+3gqlvimgnawMdxUrxeJ/ws=",
+          "licenses": ["NOTICE"]
+        }
+      ]
+    },
+    "protobuf": {
+      "name": "Protocol Buffers with Abseil",
+      "version": "34.1",
+      "platforms": ["osx_arm64", "linux_amd64", "linux_arm64"],
+      "components": [
+        {
+          "name": "abseil-cpp",
+          "version": "20260107.1",
+          "license": "Apache-2.0",
+          "url": "https://github.com/abseil/abseil-cpp/releases/download/20260107.1/abseil-cpp-20260107.1.tar.gz",
+          "hash": "sha256-QxTip8usicrCWi8jIocPND2BV5dWzv9/QxgDwskJAZU=",
+          "licenses": ["LICENSE"]
+        },
+        {
+          "name": "protobuf",
+          "version": "34.1",
+          "license": "BSD-3-Clause",
+          "url": "https://github.com/protocolbuffers/protobuf/releases/download/v34.1/protobuf-34.1.tar.gz",
+          "hash": "sha256-5Ob/EHYM90ei3s0YZ3QfVhsha9YMxAOMh1ZHE6baGEg=",
+          "licenses": ["LICENSE", "third_party/utf8_range/LICENSE"]
+        }
+      ]
+    },
+    "unixodbc": {
+      "name": "unixODBC",
+      "version": "2.3.14",
+      "platforms": ["linux_amd64", "linux_arm64"],
+      "components": [
+        {
+          "name": "unixODBC",
+          "version": "2.3.14",
+          "license": "LGPL-2.1-or-later",
+          "url": "https://github.com/lurcher/unixODBC/releases/download/v2.3.14/unixODBC-2.3.14.tar.gz",
+          "hash": "sha256-TigU3j4B/DCwufdeg7taupGrA4TulRKGUEu3AgVSR3E=",
+          "licenses": ["COPYING"]
+        }
+      ]
+    }
+  }
+}

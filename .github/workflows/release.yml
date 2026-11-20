@@ -1,0 +1,88 @@
+name: Release
+
+# Builds the artifacts of the dependency that a pushed
+# <dependency>-<version>[-r<revision>] tag names, from the recipe and
+# declaration at that tag, on each platform the dependency lists, and
+# publishes them with the sources they were built from as the release of that
+# tag. The publish step prints the artifacts' hashes.
+
+on:
+  push:
+    tags: ["*"]
+
+permissions:
+  contents: read
+
+jobs:
+  platforms:
+    runs-on: ubuntu-24.04
+    outputs:
+      dependency: ${{ steps.platforms.outputs.dependency }}
+      linux: ${{ steps.platforms.outputs.linux }}
+      macos: ${{ steps.platforms.outputs.macos }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - id: platforms
+        run: |
+          dependency=$(scripts/dependency.sh "$GITHUB_REF_NAME")
+          {
+            echo "dependency=$dependency"
+            echo "linux=$(jq -c --arg d "$dependency" '[.dependencies[$d].platforms[] | select(startswith("linux_"))
+              | {platform: ., runner: (if . == "linux_arm64" then "ubuntu-24.04-arm" else "ubuntu-24.04" end)}]' dependencies.json)"
+            echo "macos=$(jq -c --arg d "$dependency" '.dependencies[$d].platforms | index("osx_arm64") != null' dependencies.json)"
+          } >>"$GITHUB_OUTPUT"
+
+  linux:
+    needs: platforms
+    if: needs.platforms.outputs.linux != '[]'
+    strategy:
+      matrix:
+        include: ${{ fromJSON(needs.platforms.outputs.linux) }}
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Build artifact
+        env:
+          DEPENDENCY: ${{ needs.platforms.outputs.dependency }}
+        run: linux/build.sh "$DEPENDENCY"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: artifact-${{ matrix.platform }}
+          path: target/*.tar.gz
+          if-no-files-found: error
+
+  macos:
+    needs: platforms
+    if: needs.platforms.outputs.macos == 'true'
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: cachix/install-nix-action@448cde739abec1eaf0646249e3d25bb8d9bc7702 # v31
+      - name: Build artifact
+        env:
+          DEPENDENCY: ${{ needs.platforms.outputs.dependency }}
+        run: nix develop --command scripts/build.sh "$DEPENDENCY"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: artifact-osx_arm64
+          path: target/*.tar.gz
+          if-no-files-found: error
+
+  publish:
+    needs: [platforms, linux, macos]
+    if: ${{ !failure() && !cancelled() }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: artifact-*
+          path: artifacts
+          merge-multiple: true
+      - name: Publish release
+        env:
+          DEPENDENCY: ${{ needs.platforms.outputs.dependency }}
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/publish.sh "$DEPENDENCY" artifacts

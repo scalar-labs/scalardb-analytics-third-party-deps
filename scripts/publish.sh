@@ -1,0 +1,55 @@
+#!/bin/sh
+# Publishes the artifacts of a dependency as the release of its tag,
+# <dependency>-<version>[-r<revision>], which must already be pushed at the
+# commit whose recipe built them; the release workflow runs it when the tag is
+# pushed. It takes a directory holding the artifact of every platform the
+# dependency lists (scripts/build.sh writes them to target/). The release also
+# holds each upstream source the artifacts were built from, so that the
+# sources are available where the binaries are; the source archive GitHub
+# attaches to the tag holds the recipes. It is a prerelease and never the
+# latest release, and an existing release is never replaced.
+#
+# It prints the artifacts' hashes, which a consumer declares to pin them.
+#
+# Usage: scripts/publish.sh <dependency> <artifact directory>
+#
+# Requires gh with permission to create releases, curl, jq, and openssl.
+set -eu
+
+root=$(cd "$(dirname "$0")/.." && pwd)
+usage="usage: scripts/publish.sh <dependency> <artifact directory>"
+dependency=${1:?$usage}
+artifacts=${2:?$usage}
+# shellcheck source=scripts/common.sh
+. "$root/scripts/common.sh"
+field '' >/dev/null || { echo "dependencies.json declares no $dependency" >&2; exit 1; }
+tag=$(release_tag)
+
+assets=$(mktemp -d)
+trap 'rm -rf "$assets"' EXIT
+for platform in $(field '.platforms[]'); do
+	file=$artifacts/$(artifact_name).tar.gz
+	[ -f "$file" ] || { echo "no $platform artifact at $file" >&2; exit 1; }
+	cp "$file" "$assets/"
+	echo "$(artifact_name): sha256-$(openssl dgst -sha256 -binary "$file" | openssl base64 -A)"
+done
+count=$(field '.components | length')
+index=0
+while [ "$index" -lt "$count" ]; do
+	url=$(field ".components[$index].url")
+	fetch "$url" "$(field ".components[$index].hash")" "$assets/$(basename "$url")"
+	index=$((index + 1))
+done
+
+{
+	printf '%s %s, built from its upstream sources by recipes/%s.sh at this tag.\n' "$(field '.name')" "$(field '.version')" "$dependency"
+	printf 'The sources are attached here as well:\n\n'
+	field '.components[] | "- \(.name) \(.version) (\(.license)): \(.url)"'
+} >"$assets/notes"
+gh release create "$tag" "$assets"/*.tar.gz \
+	--repo "$repository" \
+	--verify-tag \
+	--title "$tag" \
+	--notes-file "$assets/notes" \
+	--prerelease \
+	--latest=false
