@@ -45,6 +45,8 @@ done
 	printf '%s %s, built from its upstream sources by recipes/%s.sh at this tag.\n' "$(field '.name')" "$(field '.version')" "$dependency"
 	printf 'The sources are attached here as well:\n\n'
 	field '.components[] | "- \(.name) \(.version) (\(.license)): \(.url)"'
+	printf '\nEach artifact holds the license texts of these components in\n'
+	printf 'LICENSES/<component>/, and where their sources are in LICENSES/SOURCES.txt.\n'
 } >"$assets/notes"
 gh release create "$tag" "$assets"/*.tar.gz \
 	--repo "$repository" \
