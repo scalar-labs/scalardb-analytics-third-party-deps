@@ -56,9 +56,10 @@ done
 	printf '%s %s is built without modification from these upstream sources by\n' "$(field '.name')" "$(field '.version')"
 	printf 'recipes/%s.sh at https://github.com/%s/tree/%s.\n' "$dependency" "$repository" "$(release_tag)"
 	printf 'Each source archive was obtained from its upstream at the URL below, checked\n'
-	printf 'against its SHA-256 hash, and is published as obtained beside the artifact at\n'
-	printf 'https://github.com/%s/releases/tag/%s.\n\n' "$repository" "$(release_tag)"
-	field '.components[] | "- \(.name) \(.version) (\(.license)), obtained from \(.url)\n  (\(.hash))"'
+	printf 'against its pinned SHA-256 hash, and is published as obtained beside the\n'
+	printf 'artifact at https://github.com/%s/releases/tag/%s,\n' "$repository" "$(release_tag)"
+	printf 'whose SHA256SUMS lists the hashes of the sources and the artifacts.\n\n'
+	field '.components[] | "- \(.name) \(.version) (\(.license)), obtained from \(.url)"'
 } >"$prefix/LICENSES/SOURCES.txt"
 
 # The recipe builds from $work/<component> and installs into $prefix, with

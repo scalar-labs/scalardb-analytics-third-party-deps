@@ -5,11 +5,13 @@
 # pushed. It takes a directory holding the artifact of every platform the
 # dependency lists (scripts/build.sh writes them to target/). The release also
 # holds each upstream source the artifacts were built from, so that the
-# sources are available where the binaries are; the source archive GitHub
-# attaches to the tag holds the recipes. It is a prerelease and never the
-# latest release, and an existing release is never replaced.
+# sources are available where the binaries are, and SHA256SUMS, the SHA-256
+# of every artifact and source in the format of `sha256sum -c`; the source
+# archive GitHub attaches to the tag holds the recipes. It is a prerelease and
+# never the latest release, and an existing release is never replaced.
 #
-# It prints the artifacts' hashes, which a consumer declares to pin them.
+# It prints the artifacts' hashes as SRI, which a consumer declares to pin
+# them.
 #
 # Usage: scripts/publish.sh <dependency> <artifact directory>
 #
@@ -40,6 +42,9 @@ while [ "$index" -lt "$count" ]; do
 	fetch "$url" "$(field ".components[$index].hash")" "$assets/$(basename "$url")"
 	index=$((index + 1))
 done
+for file in "$assets"/*.tar.gz; do
+	printf '%s  %s\n' "$(openssl dgst -sha256 -r "$file" | cut -d ' ' -f 1)" "$(basename "$file")"
+done >"$assets/SHA256SUMS"
 
 # The notes say what an artifact's LICENSES/SOURCES.txt says, taken from the
 # artifact of the first platform, so that the page and the artifacts agree.
@@ -49,7 +54,7 @@ platform=$(field '.platforms[0]')
 	printf '\nEach artifact holds the license texts of these components in\n'
 	printf 'LICENSES/<component>/, and this text in LICENSES/SOURCES.txt.\n'
 } >"$assets/notes"
-gh release create "$tag" "$assets"/*.tar.gz \
+gh release create "$tag" "$assets"/*.tar.gz "$assets/SHA256SUMS" \
 	--repo "$repository" \
 	--verify-tag \
 	--title "$tag" \

@@ -34,12 +34,21 @@ libraries' search path is set to `$ORIGIN` with patchelf after they are built.
 A release is tagged `<dependency>-<version>[-r<revision>]` and holds:
 
 - the artifact of each platform, `<tag>-<platform>.tar.gz`;
-- the upstream source archive of each component, as published by its
-  upstream.
+- the upstream source archive of each component, unmodified, as obtained from
+  the upstream URL that `dependencies.json` declares and checked against its
+  hash;
+- `SHA256SUMS`, the SHA-256 of each of those files, which
+  `sha256sum -c SHA256SUMS` checks in a directory that holds them.
 
+The release's notes name each source's upstream URL and state that the
+sources are built unmodified, as the artifact's `LICENSES/SOURCES.txt` does.
 The recipes that built the artifacts are in the source archive GitHub
 attaches to the tag. A release is a prerelease and never the latest release;
 an existing release is never replaced.
+
+The `protobuf-34.1` release was published before this wording: its artifacts'
+`SOURCES.txt` lists the sources without stating that they are unmodified, and
+its notes and `SHA256SUMS` were updated afterwards.
 
 An artifact holds one directory, `<tag>-<platform>/`, which is an
 installation prefix:
@@ -68,7 +77,8 @@ as their macOS packages.
 3. Push the tag `<dependency>-<version>[-r<revision>]` at that commit. The
    Release workflow (`.github/workflows/release.yml`) builds the artifact on
    each platform listed and publishes the tag's release. Its publish step
-   prints the artifacts' hashes.
+   prints the artifacts' hashes in SRI form (`sha256-<base64>`), the same
+   values as in `SHA256SUMS`.
 4. Declare the release and the hashes in the consumer, such as
    `packaging/dependencies.json` of ScalarDB Analytics connectors.
 
