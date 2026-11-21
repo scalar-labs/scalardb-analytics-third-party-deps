@@ -1,7 +1,8 @@
 # shellcheck shell=sh disable=SC2154 # work, prefix, and jobs are set by build.sh
 # Recipe of the Kerberos artifact for scripts/build.sh: OpenSSL 3
 # and the MIT Kerberos client libraries built against it, as shared libraries
-# that find each other beside themselves. They are what Microsoft ODBC Driver
+# that find each other beside themselves ($ORIGIN, set when they are linked;
+# Kerberos's own search path is turned off). They are what Microsoft ODBC Driver
 # 18 for SQL Server needs beyond the system: it links libkrb5 and
 # libgssapi_krb5, and loads libssl by name.
 #
@@ -21,7 +22,8 @@
 		--prefix="$prefix" \
 		--libdir=lib \
 		--openssldir=/etc/ssl \
-		shared no-tests no-docs
+		shared no-tests no-docs \
+		'-Wl,-rpath,\$$ORIGIN'
 	make -j "$jobs"
 	make install_sw
 )
@@ -45,16 +47,7 @@
 		--without-libedit \
 		--without-system-verto \
 		CPPFLAGS="-I$prefix/include" \
-		LDFLAGS="-L$prefix/lib"
+		LDFLAGS="-L$prefix/lib "'-Wl,-rpath,\$$ORIGIN'
 	make -j "$jobs"
 	make install sysconfdir="$prefix/etc" localstatedir="$prefix/var"
 )
-
-# The manylinux image's patchelf sets the search path, which the builds would
-# otherwise leave empty or make an absolute path of this build.
-for library in "$prefix"/lib/*.so.*; do
-	# shellcheck disable=SC2016 # $ORIGIN is for the dynamic loader
-	[ -L "$library" ] || patchelf --set-rpath '$ORIGIN' "$library"
-done
-# shellcheck disable=SC2016 # $ORIGIN is for the dynamic loader
-printf '\nAfter building, the search path of the shared libraries in lib/ was set to\n$ORIGIN with patchelf; they are otherwise as built.\n' >>"$prefix/LICENSES/SOURCES.txt"

@@ -23,11 +23,12 @@ its `components`, the upstream sources built into it, each with `name`,
 | Dependency | Components | Platforms | Recipe |
 | --- | --- | --- | --- |
 | `protobuf` | abseil, protobuf | osx_arm64, linux_amd64, linux_arm64 | Static, position-independent libraries for C++17, with protoc; without zlib |
-| `unixodbc` | unixODBC | linux_amd64, linux_arm64 | The shared driver manager libraries (libodbc, libodbcinst), with GNU ltdl built in |
+| `unixodbc` | unixODBC | linux_amd64, linux_arm64 | The shared driver manager libraries (libodbc, libodbcinst), with GNU ltdl built in; without the cursor library (libodbccr) |
 | `kerberos` | OpenSSL 3, MIT Kerberos | linux_amd64, linux_arm64 | The shared libraries of OpenSSL and of the Kerberos client, without keyutils, LDAP, or PKINIT |
 
-Platforms use DuckDB's names. The sources are not modified. The Linux shared
-libraries' search path is set to `$ORIGIN` with patchelf after they are built.
+Platforms use DuckDB's names. The sources are not modified, and the built
+binaries are not changed afterwards: the Linux shared libraries' search path,
+`$ORIGIN`, is given when they are linked.
 
 ## Artifacts
 

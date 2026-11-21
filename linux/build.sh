@@ -15,7 +15,7 @@ dependency=${1:?usage: linux/build.sh <dependency>}
 # shellcheck source=linux/engine.sh
 . "$root/linux/engine.sh"
 
-# The image provides GCC from gcc-toolset, CMake, make, Perl, and patchelf; jq
+# The image provides GCC from gcc-toolset, CMake, make, and Perl; jq
 # reads the declaration, and OpenSSL's Configure needs the Perl modules below.
 exec docker run --rm -v "$root:/src" -w /src "$image" sh -c '
 	dnf install -y -q jq openssl perl-IPC-Cmd perl-Time-Piece &&
