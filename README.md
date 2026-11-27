@@ -23,12 +23,17 @@ its `components`, the upstream sources built into it, each with `name`,
 | Dependency | Components | Platforms | Recipe |
 | --- | --- | --- | --- |
 | `protobuf` | abseil, protobuf | osx_arm64, linux_amd64, linux_arm64 | Static, position-independent libraries for C++17, with protoc; without zlib |
-| `unixodbc` | unixODBC | linux_amd64, linux_arm64 | The shared driver manager libraries (libodbc, libodbcinst), with GNU ltdl built in; without the cursor library (libodbccr) |
+| `unixodbc` | unixODBC | osx_arm64, linux_amd64, linux_arm64 | The shared driver manager libraries (libodbc, libodbcinst), with GNU ltdl built in; without the cursor library (libodbccr) |
 | `kerberos` | OpenSSL 3, MIT Kerberos | linux_amd64, linux_arm64 | The shared libraries of OpenSSL and of the Kerberos client, without keyutils, LDAP, or PKINIT |
 
-Platforms use DuckDB's names. The sources are not modified, and the built
-binaries are not changed afterwards: the Linux shared libraries' search path,
-`$ORIGIN`, is given when they are linked.
+Platforms use DuckDB's names. The sources are not modified. The Linux shared
+libraries' search path, `$ORIGIN`, is given when they are linked, and they are
+not changed afterwards. The macOS shared libraries are renamed after linking
+(`install_name_tool`), since libtool names them by their absolute path in the
+build and the Nix toolchain links its own libiconv: they are named relative to
+their search path (`@rpath`, which `@loader_path` resolves beside them),
+reference the system's libiconv, whose ABI is the same, and are signed again
+ad hoc. Their `LICENSES/SOURCES.txt` says so.
 
 ## Artifacts
 
